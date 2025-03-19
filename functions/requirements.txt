@@ -1,0 +1,7 @@
+requests
+varname
+python-dateutil
+pytz
+pandas
+azure-identity
+XlsxWriter

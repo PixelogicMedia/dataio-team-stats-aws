@@ -1,0 +1,17 @@
+version = 0.1
+
+[default]
+[default.global.parameters]
+tags= "project=pxl-am-proxy env=dev team=Media"
+[default.deploy]
+
+[default.deploy.parameters]
+stack_name = "dataio-analytics-channel"
+s3_bucket = "pxl-aws-proxy-ingest-code-ue1"
+s3_prefix = "dataiochannel/code"
+region = "us-east-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = false
+image_repositories = []
+parameter_overrides = "Environment=dev ForceEventBridge=false SecretName=pixelbot-chatbot VpcId=vpc-0e85a86cad45290e7 Subnet=subnet-0a57334e36e81e8ad"

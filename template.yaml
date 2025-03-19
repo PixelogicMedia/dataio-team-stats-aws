@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  python3.8
+
+  Sample SAM Template for dataio-sam
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+  ForceEventBridge:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+      - auto
+  VpcId:
+    Type: String
+    Default: ''
+  Subnet:
+    Type: List<String>
+    Default: ''
+
+  SecretName:
+    Type: String
+    Default: ''
+
+  MapMigrationTag:
+    Description: Tag value for map-migrated key to be applied to resources.
+    Type: String
+    Default: mig1TE3UHEWRS
+    
+
+Resources:
+  SendMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: send_message
+      CodeUri: functions
+      Handler: app.handler
+      Runtime: python3.10
+      Timeout: 900
+      MemorySize: 1600
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          Region: !Ref AWS::Region
+          SecretName: !Sub "${SecretName}-${Environment}"
+      Role: !GetAtt LambdaFunctionRole.Arn
+      VpcConfig:
+        SecurityGroupIds:
+            - !GetAtt DataIOChannelSecurityGroup.GroupId
+        SubnetIds: !Ref Subnet
+
+  LambdaFunctionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: !Sub ${AWS::StackName}-${AWS::Region}-lambda-role
+        Tags:
+          - Key: map-migrated
+            Value: !Ref MapMigrationTag
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: /
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole 
+          - !Ref LogPolicy
+          - !Ref SecretPolicy
+
+  SecretPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-${AWS::Region}-secret-policy
+      Path: /
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:  !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SecretName}-${Environment}-*"
+
+  LogPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-${AWS::Region}-log-policy
+      Path: /
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*
+
+  
+  DataIOChannelSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Security Group for DataIoChannel lambda
+      GroupName: !Sub ${AWS::StackName}-sg
+      VpcId: !Ref VpcId
+
+
+  SendMessageFunctionEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: SendMessageFunctionTrigger
+      Description: "Triggers the SendMessageFunction at 0am on the first day of every month."
+      ScheduleExpression: cron(0 0 1 * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt SendMessageFunction.Arn
+          Id: "SendMessageFunctionTarget"
+          RoleArn: !GetAtt EventBridgeInvokeRole.Arn
+  
+
+  EventBridgeInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt SendMessageFunction.Arn
