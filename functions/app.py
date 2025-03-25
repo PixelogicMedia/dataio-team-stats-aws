@@ -171,7 +171,7 @@ def handler(event,context):
         
         return {
             'statusCode': 200,
-            'body': 'url' 
+            'body': url
         }
         
     except Exception as e:
