@@ -1,4 +1,4 @@
-from azure.identity import UsernamePasswordCredential, ClientSecretCredential
+from azure.identity import ClientSecretCredential
 from datetime import datetime
 
 # SCOPES = ['User.Read', 'Files.ReadWrite.All', 'ChannelSettings.Read.All', 'Channel.ReadBasic.All', 'ChannelMessage.Read.All', 'Sites.Read.All', 'Sites.ReadWrite.All']

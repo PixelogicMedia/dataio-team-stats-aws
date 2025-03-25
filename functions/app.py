@@ -30,7 +30,7 @@ def handler(event,context):
         last_day_previous_month = first_day_current_month - dt.timedelta(days=1)
 
         days_in_last_month = last_day_previous_month.day
-
+        
         query_time_ago = dt.datetime.now() - dt.timedelta(days=days_in_last_month)
         
         cutoff_date = query_time_ago.astimezone(pytz.timezone('America/Los_Angeles'))
@@ -171,7 +171,7 @@ def handler(event,context):
         
         return {
             'statusCode': 200,
-            'body': url 
+            'body': 'url' 
         }
         
     except Exception as e:
