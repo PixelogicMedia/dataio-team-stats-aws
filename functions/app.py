@@ -13,6 +13,13 @@ from helpers import html_to_text, get_replies,valid_excel_title, get_credentials
 
 def handler(event,context):
     try:
+        now = dt.datetime.now()
+        if now.day != 1:
+            return {
+                'statusCode': 200,
+                'body': 'Today is not the first day of the month.'
+            }
+            
         secret_name = os.environ.get('SecretName')
         region = os.environ.get('Region')
         base_url = 'https://graph.microsoft.com/v1.0/'
@@ -24,19 +31,18 @@ def handler(event,context):
         }
 
         channels_to_query,channels_to_post, DATA_IO_URL = get_credentials(secret)
-        
-        first_day_current_month = dt.datetime.now().replace(day=1)
 
-        last_day_previous_month = first_day_current_month - dt.timedelta(days=1)
+        last_day_previous_month = now - dt.timedelta(days=1)
 
         days_in_last_month = last_day_previous_month.day
         
-        query_time_ago = dt.datetime.now() - dt.timedelta(days=days_in_last_month)
+        query_time_ago = now - dt.timedelta(days=days_in_last_month)
         
         cutoff_date = query_time_ago.astimezone(pytz.timezone('America/Los_Angeles'))
         #fields = ['message_id', 'requester', 'content', 'response time', '1st response', 'first responder', '1st response text', 'last response', 'last responder', 'last response text']
 
-        last_month_date = dt.datetime.now() - relativedelta(months=1)
+        last_month_date = now - relativedelta(months=1)
+        
         output_xlsx = f'/tmp/dataio_iqc_result_{last_month_date.year}{last_month_date.month}.xlsx'
         output_name = f'dataio_iqc_result_{last_month_date.year}{last_month_date.month}.xlsx'
         # Create a Pandas Excel writer using XlsxWriter as the engine.
