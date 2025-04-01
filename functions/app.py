@@ -87,7 +87,7 @@ def handler(event,context):
                         data = get_replies(team_id, channel_id, m['id'],secret)
                         start_time = time_parser.parse(m['createdDateTime'])
                         if start_time < cutoff_date or section_count > 2000:
-                            print(f'{count} records found in {title}')
+                            print(f'{section_count} records found in {title}')
                             completed = True
                             break
 

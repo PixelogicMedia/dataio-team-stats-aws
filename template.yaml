@@ -123,7 +123,7 @@ Resources:
     Properties:
       Name: SendMessageFunctionTrigger
       Description: "Triggers the SendMessageFunction at 0am on the first day of every month."
-      ScheduleExpression: cron(1 0 1,7,14,21,28 * ? *)
+      ScheduleExpression: cron(1 8 1,7,14,21,28 * ? *)
       State: ENABLED
       Targets:
         - Arn: !GetAtt SendMessageFunction.Arn
