@@ -13,7 +13,7 @@ from helpers import html_to_text, get_replies,valid_excel_title, get_credentials
 
 def handler(event,context):
     try:
-        now = dt.datetime.now()
+        now = dt.datetime.now(dt.timezone.utc)
         if now.day != 1:
             return {
                 'statusCode': 200,
@@ -37,6 +37,8 @@ def handler(event,context):
         days_in_last_month = last_day_previous_month.day
         
         query_time_ago = now - dt.timedelta(days=days_in_last_month)
+        
+        query_time_ago = query_time_ago + dt.timedelta(hours=7)
         
         cutoff_date = query_time_ago.astimezone(pytz.timezone('America/Los_Angeles'))
         #fields = ['message_id', 'requester', 'content', 'response time', '1st response', 'first responder', '1st response text', 'last response', 'last responder', 'last response text']
